@@ -67,8 +67,9 @@ def performance_callbacks(app):
         if pathname == 'create':
             return form
         elif pathname == 'display':
-            sqlConnect.mycursor.execute("SELECT * FROM performance_reviews")
-            data = sqlConnect.mycursor.fetchall()
+            mydb , cursor = sqlConnect.connect()
+            cursor.execute("SELECT * FROM performance_reviews")
+            data = cursor.fetchall()
             myresult = pd.DataFrame(data , columns=[
                                     'review_id', 'review_date', 'employee_id', 'rating', 'comments'])
             table = dash_table.DataTable(
@@ -81,6 +82,7 @@ def performance_callbacks(app):
                     'fontWeight': 'bold'
                 }
             )
+            sqlConnect.commit(mydb)
             return table
 
 def performance_submit(app):
@@ -95,8 +97,9 @@ def performance_submit(app):
         ctx = callback_context
         if ctx.triggered[0]['prop_id'] == 'submit-val.n_clicks':
             try:
-                sqlConnect.mycursor.execute("INSERT INTO performance_reviews (review_date, employee_id, rating, comments) VALUES (%s, %s, %s, %s)", (start_date, employee_id3, rating, comments))
-                sqlConnect.mydb.commit()
+                mydb , cursor = sqlConnect.connect()
+                cursor.execute("INSERT INTO performance_reviews (review_date, employee_id, rating, comments) VALUES (%s, %s, %s, %s)", (start_date, employee_id3, rating, comments))
+                sqlConnect.commit(mydb)
                 return 'Success'
             except Exception as e:
                 print(e)

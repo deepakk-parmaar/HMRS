@@ -68,8 +68,9 @@ def position_callbacks(app):
         if pathname == 'create':
             return form
         elif pathname == 'display':
-            sqlConnect.mycursor.execute("SELECT * FROM positions")
-            myresult = sqlConnect.mycursor.fetchall()
+            mydb, cursor = sqlConnect.connect()
+            cursor.execute("SELECT * FROM positions")
+            myresult = cursor.fetchall()
             myresult = pd.DataFrame(
                 myresult, columns=['position_id', 'title', 'description', 'is_vacant'])
             table = dash_table.DataTable(
@@ -88,6 +89,7 @@ def position_callbacks(app):
                     }
                 ]
             )
+            sqlConnect.commit(mydb)
             return table
 
 
@@ -102,11 +104,12 @@ def position_submit(app):
         ctx = callback_context
         if ctx.triggered[0]['prop_id'] == 'submit-val.n_clicks':
             try:
-                sqlConnect.mycursor.execute(
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute(
                     "INSERT INTO positions (title, description, is_vacant) VALUES (%s, %s, %s)",
                     (title, description, 1 if is_vacant else 0)
                 )
-                sqlConnect.mydb.commit()
+                sqlConnect.commit(mydb)
                 return "Position added successfully"
             except Exception as e:
                 return f'Error adding position {e}'

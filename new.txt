@@ -108,6 +108,14 @@ END;
 //
 DELIMITER ;
 
+DELIMITER //
+CREATE FUNCTION IF NOT EXISTS CalculateAge(dob DATE)
+     RETURNS INT
+     BEGIN
+         RETURN YEAR(CURDATE()) - YEAR(dob) - (RIGHT(CURDATE(), 5) < RIGHT(dob, 5));
+     END;
+//
+DELIMITER ;
 
 -- Insert data into tables
 

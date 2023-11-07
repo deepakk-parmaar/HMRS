@@ -91,9 +91,10 @@ def employee_form_callbacks(app):
         if pathname == 'create':
             return form_employee
         elif pathname == 'display':
-            sqlConnect.mycursor.execute(
+            mydb, cursor = sqlConnect.connect()
+            cursor.execute(
                 "SELECT employee_id,first_name, last_name, date_of_birth, gender, email, hire_date, position_id, department_id, supervisor_id FROM employees")
-            data = sqlConnect.mycursor.fetchall()
+            data = cursor.fetchall()
             df = pd.DataFrame(data, columns=['employee_id', 'first_name', 'last_name', 'date_of_birth',
                               'gender', 'email', 'hire_date', 'position_id', 'department_id', 'supervisor_id'])
 
@@ -110,6 +111,7 @@ def employee_form_callbacks(app):
                 row_selectable='single',  # Allows single row selection
                 selected_rows=[],  # Initialize selected_rows
             )
+            sqlConnect.commit(mydb)
             return html.Div([table, html.Button('Delete Selected', id='delete-button', n_clicks=0, style={'margin-top': '10px', 'width': '100%'})])
 
 
@@ -131,12 +133,13 @@ def employee_submit(app):
         ctx = callback_context
         if ctx.triggered[0]['prop_id'] == 'submit-val.n_clicks':
             try:
-                sqlConnect.mycursor.execute(
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute(
                     "INSERT INTO employees (first_name, last_name, date_of_birth, gender, email, hire_date, position_id, department_id, supervisor_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (first_name, last_name, dob, gender, email,
                      hire_date, position_id, department_id, manager_id)
                 )
-                sqlConnect.mydb.commit()
+                sqlConnect.commit(mydb)
                 return 'The record was successfully added to the database'
             except Exception as e:
                 return f'Error: {str(e)}'
@@ -165,17 +168,22 @@ def employee_update(app):
                         if new_value != old_value and column != 'employee_id':
                             if column in ['position_id', 'department_id', 'supervisor_id']:
                                 # Update foreign key columns
-                                sqlConnect.mycursor.execute(
+                                mydb , cursor = sqlConnect.connect()
+                                cursor.execute(
                                     f"UPDATE employees SET {column} = %s WHERE employee_id = %s",
                                     (new_value, employee_id)
                                 )
+                                sqlConnect.commit(mydb)
+
                             else:
                                 # Update other columns
-                                sqlConnect.mycursor.execute(
+                                mydb , cursor = sqlConnect.connect()
+                                cursor.execute(
                                     f"UPDATE employees SET {column} = %s WHERE employee_id = %s",
                                     (new_value, employee_id)
                                 )
-                            sqlConnect.mydb.commit()
+                                sqlConnect.commit(mydb)
+
 
                 return 'Database updated successfully.'
             except Exception as e:
@@ -200,9 +208,10 @@ def employee_display_delete(app):
                 if selected_rows[0] is not None:
                     # print(selected_rows)
                     try:
-                        sqlConnect.mycursor.execute(
+                        mydb , cursor = sqlConnect.connect()
+                        cursor.execute(
                             "DELETE FROM employees WHERE employee_id = %s", (selected_rows[0]+1,))
-                        sqlConnect.mydb.commit()
+                        sqlConnect.commit(mydb)
                         return 'The record was successfully deleted from the database'
                     except Exception as e:
                         return f'Error deleting employee record: {e}'

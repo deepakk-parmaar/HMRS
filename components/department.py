@@ -58,8 +58,9 @@ def department_callbacks(app):
         if pathname == 'create':
             return form
         elif pathname == 'display':
-            sqlConnect.mycursor.execute("SELECT * FROM departments")
-            myresult = sqlConnect.mycursor.fetchall()
+            mydb , cursor = sqlConnect.connect()
+            cursor.execute("SELECT * FROM departments")
+            myresult = cursor.fetchall()
             myresult = pd.DataFrame(
                 myresult, columns=['department_id', 'department_name', 'location'])
             table = dash_table.DataTable(
@@ -72,6 +73,7 @@ def department_callbacks(app):
                     'fontWeight': 'bold'
                 }
             )
+            sqlConnect.commit(mydb)
             return table
 
 
@@ -86,9 +88,10 @@ def department_submit(app):
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
         if button_id == 'submit-val':
             try:
-                sqlConnect.mycursor.execute(
+                mydb , cursor = sqlConnect.connect()
+                cursor.execute(
                     "INSERT INTO departments (department_name, location) VALUES (%s, %s)", (department_name, location))
-                sqlConnect.mydb.commit()
+                sqlConnect.commit(mydb)
                 return 'The record has been created'
-            except:
-                return f'Error: {str(e)}'
+            except Exception as e:
+                return f'Error: {e}'

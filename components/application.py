@@ -8,14 +8,15 @@ import importlib.util
 
 import pandas as pd
 
-current_directory = os.path.dirname(os.path.realpath(__file__))  # Get the directory of the current script
+# Get the directory of the current script
+current_directory = os.path.dirname(os.path.realpath(__file__))
 
 module_path = os.path.join(current_directory, "sqlConnect.py")
 spec = importlib.util.spec_from_file_location("sqlConnect", module_path)
 sqlConnect = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sqlConnect)
 
-btn8_content = html.Div([   
+btn8_content = html.Div([
     html.H2('Application'),
     dcc.RadioItems(
         id='input-name',
@@ -25,30 +26,35 @@ btn8_content = html.Div([
         ],
         value='create',
         labelStyle={'display': 'block'},
-                    style={
-                        'display': 'flex',
-                        'padding': '10px'
-                    }
+        style={
+            'display': 'flex',
+            'padding': '10px'
+        }
     ),
     html.Div(id='application',),
     html.Div(id='application_out',),
 
-    ])
-form  = html.Div([
+])
+form = html.Div([
     html.H1("Application Form"),
     html.Div([
         html.Label('Position ID'),
-        dcc.Input(type='number', id='position_id2', style={'margin-bottom': '10px', 'width': '100%'}),
+        dcc.Input(type='number', id='position_id2', style={
+                  'margin-bottom': '10px', 'width': '100%'}),
 
         html.Label('Employee ID'),
-        dcc.Input(type='number', id='employee_id4', style={'margin-bottom': '10px', 'width': '100%'}),
+        dcc.Input(type='number', id='employee_id4', style={
+                  'margin-bottom': '10px', 'width': '100%'}),
 
         html.Label('Status'),
-        dcc.Input(type='text', id='status', style={'margin-bottom': '10px', 'width': '100%'}),
+        dcc.Input(type='text', id='status', style={
+                  'margin-bottom': '10px', 'width': '100%'}),
 
-        html.Button('Submit', id='submit-val', n_clicks=0, style={'margin-top': '10px', 'width': '100%'}),
+        html.Button('Submit', id='submit-val', n_clicks=0,
+                    style={'margin-top': '10px', 'width': '100%'}),
     ], style={'width': '50%', 'margin': 'auto', 'padding': '20px', 'border': '1px solid #ccc'})
 ]),
+
 
 def application_callbacks(app):
     @app.callback(Output('application', 'children'),
@@ -57,9 +63,11 @@ def application_callbacks(app):
         if pathname == 'create':
             return form
         elif pathname == 'display':
-            sqlConnect.mycursor.execute("SELECT * FROM applications")
-            myresult = sqlConnect.mycursor.fetchall()
-            myresult = pd.DataFrame(myresult, columns=['application_id','position_id', 'employee_id', 'status'])
+            mydb, cursor = sqlConnect.connect()
+            cursor.execute("SELECT * FROM applications")
+            myresult = cursor.fetchall()
+            myresult = pd.DataFrame(
+                myresult, columns=['application_id', 'position_id', 'employee_id', 'status'])
             table = dash_table.DataTable(
                 id='table',
                 columns=[{"name": i, "id": i} for i in myresult.columns],
@@ -74,20 +82,24 @@ def application_callbacks(app):
                     'backgroundColor': 'rgb(248, 248, 248)'
                 }],
             )
+            sqlConnect.commit(mydb)
             return table
-        
+
+
 def application_submit(app):
     @app.callback(Output('application_out', 'children'),
                   [Input('submit-val', 'n_clicks')],
                   [Input('position_id2', 'value')],
-                    [Input('employee_id4', 'value')],
-                    [Input('status', 'value')])
+                  [Input('employee_id4', 'value')],
+                  [Input('status', 'value')])
     def update_output(n_clicks, position_id, employee_id, status):
         ctx = callback_context
         if ctx.triggered[0]['prop_id'] == 'submit-val.n_clicks':
             try:
-                sqlConnect.mycursor.execute("INSERT INTO applications (position_id, employee_id, status) VALUES (%s, %s, %s)", (position_id, employee_id, status))
-                sqlConnect.mydb.commit()
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute("INSERT INTO applications (position_id, employee_id, status) VALUES (%s, %s, %s)", (
+                    position_id, employee_id, status))
+                sqlConnect.commit(mydb)
                 return "Application Submitted"
             except Exception as e:
-                return str(e)   
+                return str(e)

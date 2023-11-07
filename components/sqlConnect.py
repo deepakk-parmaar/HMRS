@@ -2,16 +2,17 @@ import mysql.connector
 import pandas as pd
 
 # Establish a connection to your MySQL database
-mydb = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="123456",
-    database="project"
-)
-
-# Create a cursor to execute SQL commands
-mycursor = mydb.cursor()
-
+def connect():
+    mydb = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="123456",
+        database="project"
+    )
+    return mydb , mydb.cursor()    
+def commit(mydb):
+    mydb.commit()
+    mydb.close()
 # SQL statements to create tables with IF NOT EXISTS condition in the correct order
 # sql_commands = ["""
 #     SET GLOBAL log_bin_trust_function_creators = 1;

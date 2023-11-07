@@ -1,7 +1,7 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-from components import dashBoard , employee , department, position, attendance, leave, performance, application, sqlConnect
+from components import dashBoard, employee, department, position, attendance, leave, performance, application, sqlConnect
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
 button_options = [
@@ -58,6 +58,7 @@ button_content = {
     'btn8': application.btn8_content,
 }
 
+
 @app.callback(
     Output('dynamic-content', 'children'),
     [Input('button-selector', 'value')]
@@ -65,23 +66,17 @@ button_content = {
 def update_content(selected_button):
     return button_content.get(selected_button, html.Div('No content to display for this button.'))
 
+
 # Callbacks for each component
 dashBoard.dashBoard_callbacks(app)
-sqlConnect.mycursor.reset()
 dashBoard.queries_callback(app)
-sqlConnect.mycursor.reset()
-dashBoard.dept_name_input(app)
-sqlConnect.mycursor.reset()
 dashBoard.dept_rating_input(app)
-sqlConnect.mycursor.reset()
+dashBoard.dept_name_input(app)
 employee.employee_submit(app)
-sqlConnect.mycursor.reset()
 employee.employee_form_callbacks(app)
 employee.employee_update(app)
 employee.employee_display_delete(app)
-sqlConnect.mycursor.reset()
 department.department_callbacks(app)
-sqlConnect.mycursor.reset()
 department.department_submit(app)
 position.position_callbacks(app)
 position.position_submit(app)

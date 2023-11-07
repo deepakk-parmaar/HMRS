@@ -124,9 +124,10 @@ def queries_callback(app):
                 ])
 
             elif button_id == 'btn-no-applicants':
-                sqlConnect.mycursor.execute(
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute(
                     '''SELECT position_id,title,description FROM positions WHERE position_id NOT IN (SELECT position_id FROM applications);''')
-                data = sqlConnect.mycursor.fetchall()
+                data = cursor.fetchall()
                 df = pd.DataFrame(
                     data, columns=['Position ID', 'Title', 'Description'])
                 table = dash_table.DataTable(
@@ -139,6 +140,7 @@ def queries_callback(app):
                         'fontWeight': 'bold'
                     }
                 )
+                sqlConnect.commit(mydb)
                 if data:
                     return html.Div([
                         html.H2('Positions with No Applicants'),
@@ -151,12 +153,13 @@ def queries_callback(app):
                     ])
 
             elif button_id == 'btn-vacant-details':
-                sqlConnect.mycursor.execute('''SELECT e.first_name, e.last_name, p.title
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute('''SELECT e.first_name, e.last_name, p.title
                                                 FROM employees e
                                                 JOIN applications a ON e.employee_id = a.employee_id
                                                 JOIN positions p ON a.position_id = p.position_id
                                                 WHERE p.is_vacant = TRUE;''')
-                data = sqlConnect.mycursor.fetchall()
+                data = cursor.fetchall()
                 df = pd.DataFrame(
                     data, columns=['First Name', 'Last Name', 'Title'])
                 table = dash_table.DataTable(
@@ -169,6 +172,7 @@ def queries_callback(app):
                         'fontWeight': 'bold'
                     }
                 )
+                sqlConnect.commit(mydb)
                 if data:
                     return html.Div([
                         html.H2('Details of Employees for Vacant Positions'),
@@ -180,7 +184,8 @@ def queries_callback(app):
                         html.P('No employees for vacant positions found.')
                     ])
             elif button_id == 'btn-high-performers':
-                sqlConnect.mycursor.execute('''SELECT e.first_name, e.last_name, pr.rating, d.department_name
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute('''SELECT e.first_name, e.last_name, pr.rating, d.department_name
                                                 FROM employees e
                                                 JOIN performance_reviews pr ON e.employee_id = pr.employee_id
                                                 JOIN departments d ON e.department_id = d.department_id
@@ -189,7 +194,7 @@ def queries_callback(app):
                                                     FROM performance_reviews pr2
                                                     WHERE pr2.employee_id = e.employee_id
                                                 );''')
-                data = sqlConnect.mycursor.fetchall()
+                data = cursor.fetchall()
                 df = pd.DataFrame(
                     data, columns=['First Name', 'Last Name', 'Rating', 'Department Name'])
                 table = dash_table.DataTable(
@@ -202,6 +207,7 @@ def queries_callback(app):
                         'fontWeight': 'bold'
                     }
                 )
+                sqlConnect.commit(mydb)
                 if data:
                     return html.Div([
                         html.H2('High Performers'),
@@ -213,10 +219,11 @@ def queries_callback(app):
                         html.P('No high performers found.')
                     ])
             elif button_id == 'btn-supervisors':
-                sqlConnect.mycursor.execute('''SELECT e.first_name, e.last_name
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute('''SELECT e.first_name, e.last_name
                                                 FROM employees e
                                                 WHERE e.employee_id IN (SELECT supervisor_id FROM employees WHERE supervisor_id IS NOT NULL);''')
-                data = sqlConnect.mycursor.fetchall()
+                data = cursor.fetchall()
                 df = pd.DataFrame(data, columns=['First Name', 'Last Name'])
                 table = dash_table.DataTable(
                     id='table',
@@ -228,6 +235,7 @@ def queries_callback(app):
                         'fontWeight': 'bold'
                     }
                 )
+                sqlConnect.commit(mydb)
                 if data:
                     return html.Div([
                         html.H2('Supervisors'),
@@ -239,11 +247,12 @@ def queries_callback(app):
                         html.P('No supervisors found.')
                     ])
             elif button_id == 'btn-employees-per-dept':
-                sqlConnect.mycursor.execute('''SELECT d.department_name, COUNT(e.employee_id) AS num_employees
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute('''SELECT d.department_name, COUNT(e.employee_id) AS num_employees
                                                 FROM employees e
                                                 JOIN departments d ON e.department_id = d.department_id
                                                 GROUP BY d.department_name;''')
-                data = sqlConnect.mycursor.fetchall()
+                data = cursor.fetchall()
                 df = pd.DataFrame(
                     data, columns=['Department Name', 'Number of Employees'])
                 table = dash_table.DataTable(
@@ -256,6 +265,7 @@ def queries_callback(app):
                         'fontWeight': 'bold'
                     }
                 )
+                sqlConnect.commit(mydb)
                 if data:
                     return html.Div([
                         html.H2('Number of Employees per Department'),
@@ -268,11 +278,12 @@ def queries_callback(app):
                     ])
 
             elif button_id == 'btn-avg-age':
-                sqlConnect.mycursor.execute('''SELECT d.department_name, AVG(CalculateAge(e.date_of_birth)) AS avg_age
+                mydb, cursor = sqlConnect.connect()
+                cursor.execute('''SELECT d.department_name, AVG(CalculateAge(e.date_of_birth)) AS avg_age
                                                 FROM employees e
                                                 JOIN departments d ON e.department_id = d.department_id
                                                 GROUP BY d.department_name;''')
-                data = sqlConnect.mycursor.fetchall()
+                data = cursor.fetchall()
                 df = pd.DataFrame(
                     data, columns=['Department Name', 'Average Age'])
                 table = dash_table.DataTable(
@@ -285,6 +296,7 @@ def queries_callback(app):
                         'fontWeight': 'bold'
                     }
                 )
+                # sqlConnect.commit(mydb)
                 if data:
                     return html.Div([
                         html.H2('Average Age'),
@@ -304,11 +316,11 @@ def dept_name_input(app):
     )
     def update_output(dept_name):
         if dept_name is not None and dept_name != '' and dept_name in ['Engineering', 'Human Resources', 'Marketing', 'Sales', 'New']:
-            while sqlConnect.mycursor.nextset():
-                pass
-            sqlConnect.mycursor.execute(
+            mydb, cursor = sqlConnect.connect()
+            cursor.reset()
+            cursor.execute(
                 '''CALL GetEmployeesByDepartment(%s);''', (dept_name,))
-            data = sqlConnect.mycursor.fetchall()
+            data = cursor.fetchall()
             df = pd.DataFrame(
                 data, columns=['First Name', 'Last Name', 'Department Name'])
             table = dash_table.DataTable(
@@ -322,6 +334,7 @@ def dept_name_input(app):
                 }
             )
             if data:
+                # sqlConnect.commit(mydb)
                 return html.Div([
                     html.H2('Get Employees By Department'),
                     table
@@ -344,12 +357,12 @@ def dept_rating_input(app):
         [Input('dept-name2', 'value')]
     )
     def update_output(dept_name):
-        if dept_name is not None and dept_name != '' and dept_name in ['1','2','3','4','5']:
-            while sqlConnect.mycursor.nextset():
-                pass
-            sqlConnect.mycursor.execute(
+        if dept_name is not None and dept_name != '':
+            mydb, cursor = sqlConnect.connect()
+            cursor.reset()
+            cursor.execute(
                 '''SELECT avgDepartmentRating(%s) AS department_average_rating;''', (dept_name,))
-            data = sqlConnect.mycursor.fetchall()
+            data = cursor.fetchall()
             df = pd.DataFrame(data, columns=['Department Average Rating'])
             table = dash_table.DataTable(
                 id='table',
@@ -361,6 +374,7 @@ def dept_rating_input(app):
                     'fontWeight': 'bold'
                 }
             )
+            # sqlConnect.commit(mydb)
             if data:
                 return html.Div([
                     html.H2('Average Department Rating'),

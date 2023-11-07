@@ -44,7 +44,8 @@ form = html.Div([
                   'margin-bottom': '10px', 'width': '100%'}),
 
         html.Label('Employee ID'),
-        dcc.Input(type='text', id='employee_id2', style={'margin-bottom': '10px', 'width': '100%'}),
+        dcc.Input(type='text', id='employee_id2', style={
+                  'margin-bottom': '10px', 'width': '100%'}),
 
         html.Label('Start Date'),
         dcc.DatePickerSingle(id='start_date', date='1970-01-01',
@@ -67,8 +68,9 @@ def leave_callbacks(app):
         if pathname == 'create':
             return form
         elif pathname == 'display':
-            sqlConnect.mycursor.execute("SELECT * FROM employee_leaves")
-            myresult = sqlConnect.mycursor.fetchall()
+            mydb, cursor = sqlConnect.connect()
+            cursor.execute("SELECT * FROM employee_leaves")
+            myresult = cursor.fetchall()
             myresult = pd.DataFrame(myresult, columns=[
                                     'leave_id', 'Attendance', 'employee_id', 'start_date', 'end_date'])
             table = dash_table.DataTable(
@@ -81,16 +83,17 @@ def leave_callbacks(app):
                     'fontWeight': 'bold'
                 }
             )
+            sqlConnect.commit(mydb)
             return table
 
 
 def leave_submit(app):
     @app.callback(Output('leave_out', 'children'),
-                    [Input('submit-val', 'n_clicks')],
-                    [Input('attendance', 'value'),
-                     Input('employee_id2', 'value'),
-                     Input('start_date', 'date'),
-                     Input('end_date', 'date')])
+                  [Input('submit-val', 'n_clicks')],
+                  [Input('attendance', 'value'),
+                   Input('employee_id2', 'value'),
+                   Input('start_date', 'date'),
+                   Input('end_date', 'date')])
     def update_output(n_clicks, attendance, employee_id2, start_date, end_date):
         ctx = callback_context
         if ctx.triggered:
@@ -98,13 +101,16 @@ def leave_submit(app):
             if button_id == 'submit-val':
                 try:
                     # print(f"Attendance: {attendance}, Employee ID: {employee_id2}, Start Date: {start_date}, End Date: {end_date}")
-                    sqlConnect.mycursor.execute("INSERT INTO employee_leaves (Attendance, employee_id, start_date, end_date) VALUES (%s, %s, %s, %s)", (attendance, employee_id2, start_date, end_date))
-                    sqlConnect.mydb.commit()
+                    mydb, cursor = sqlConnect.connect()
+                    cursor.execute("INSERT INTO employee_leaves (Attendance, employee_id, start_date, end_date) VALUES (%s, %s, %s, %s)", (
+                        attendance, employee_id2, start_date, end_date))
+                    sqlConnect.commit(mydb)
                     return html.Div([
                         html.H3('Leave Submitted'),
                     ])
                 except Exception as e:
                     return html.Div([
                         html.H3('Error: ' + str(e)),
-                        html.H3("INSERT INTO employee_leaves (Attendance, employee_id, start_date, end_date) VALUES (%s, %s, %s, %s)", (attendance, employee_id2, start_date, end_date)),
+                        html.H3("INSERT INTO employee_leaves (Attendance, employee_id, start_date, end_date) VALUES (%s, %s, %s, %s)", (
+                            attendance, employee_id2, start_date, end_date)),
                     ])

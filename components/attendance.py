@@ -66,8 +66,9 @@ def attendance_callbacks(app):
         if pathname == 'create':
             return form
         elif pathname == 'display':
-            sqlConnect.mycursor.execute("SELECT * FROM attendance")
-            myresult = sqlConnect.mycursor.fetchall()
+            mydb, cursor = sqlConnect.connect()
+            cursor.execute("SELECT * FROM attendance")
+            myresult = cursor.fetchall()
             myresult = pd.DataFrame(myresult, columns=['employee_id', 'date', 'is_present'])
             table = dash_table.DataTable(
                 id='table',
@@ -85,6 +86,7 @@ def attendance_callbacks(app):
                     }
                 ]
             )
+            sqlConnect.commit(mydb)
             return table
 
 def attendance_submit(app):
@@ -97,8 +99,9 @@ def attendance_submit(app):
         ctx = callback_context
         if ctx.triggered[0]['prop_id'] == 'submit-val.n_clicks':
             try:
-                sqlConnect.mycursor.execute("INSERT INTO attendance (employee_id, date, is_present) VALUES (%s, %s, %s)", (employee_id, date, 1 if is_present else 0))
-                sqlConnect.mydb.commit()
+                mydb, cursor =sqlConnect.connect()
+                cursor.execute("INSERT INTO attendance (employee_id, date, is_present) VALUES (%s, %s, %s)", (employee_id, date, 1 if is_present else 0))
+                sqlConnect.commit(mydb)
                 return html.Div([html.H3('Attendance information added successfully.')])
             except Exception as e:
                 return html.Div([html.H3('There was an error updating the table.'), str(e)])
