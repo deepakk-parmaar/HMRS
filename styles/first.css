@@ -1,0 +1,36 @@
+/* styles.css */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+.heading {
+    background-color: #33415c;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.container {
+    display: flex;
+}
+
+.btn-container {
+    width: 20%;
+    background-color: #f7f7f7;
+    padding: 20px;
+}
+
+.btn-options {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.content-container {
+    width: 80%;
+    padding: 20px;
+    background-color: #ffffff;
+}
