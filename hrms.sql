@@ -181,7 +181,7 @@ JOIN positions p ON a.position_id = p.position_id
 WHERE p.is_vacant = TRUE;
 
 --Correlated Queries
-List employees with a higher performance rating than their department's average rating:
+--List employees with a higher performance rating than their department's average rating:
 SELECT e.first_name, e.last_name, pr.rating, d.department_name
 FROM employees e
 JOIN performance_reviews pr ON e.employee_id = pr.employee_id
